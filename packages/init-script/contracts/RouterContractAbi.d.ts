@@ -111,7 +111,7 @@ export class RouterContractAbi extends Contract {
   functions: {
     add_liquidity: InvokeFunction<
       [
-        pool: string,
+        pool_address: string,
         amount_0_desired: BigNumberish,
         amount_1_desired: BigNumberish,
         amount_0_min: BigNumberish,
@@ -129,7 +129,7 @@ export class RouterContractAbi extends Contract {
     >;
 
     swap_exact_input: InvokeFunction<
-      [pool: string, min_amount_out: BigNumberish, recipient: IdentityInput],
+      [pool_address: string, min_amount_out: BigNumberish, recipient: IdentityInput],
       SwapOutputOutput
     >;
 
@@ -140,7 +140,7 @@ export class RouterContractAbi extends Contract {
 
     swap_exact_output: InvokeFunction<
       [
-        pool: string,
+        pool_address: string,
         amount_out: BigNumberish,
         max_amount_in: BigNumberish,
         recipient: IdentityInput

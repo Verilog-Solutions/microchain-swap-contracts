@@ -118,7 +118,7 @@ export type IdentityOutput = Enum<{
   ContractId: ContractIdOutput;
 }>;
 
-interface ExchangeContractAbiInterface extends Interface {
+interface PoolContractAbiInterface extends Interface {
   functions: {
     add_liquidity: FunctionFragment;
     cache_vault_fees: FunctionFragment;
@@ -170,8 +170,8 @@ interface ExchangeContractAbiInterface extends Interface {
   decodeFunctionData(functionFragment: 'withdraw_protocol_fees', data: BytesLike): DecodedValue;
 }
 
-export class ExchangeContractAbi extends Contract {
-  interface: ExchangeContractAbiInterface;
+export class PoolContractAbi extends Contract {
+  interface: PoolContractAbiInterface;
   functions: {
     add_liquidity: InvokeFunction<[recipient: IdentityInput], BN>;
 

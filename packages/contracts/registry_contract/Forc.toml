@@ -5,5 +5,5 @@ license = "Apache-2.0"
 name = "registry_contract"
 
 [dependencies]
-exchange_abi = { path = "../exchange_abi" }
+pool_abi = { path = "../pool_abi" }
 microchain_helpers = { path = "../microchain_helpers" }

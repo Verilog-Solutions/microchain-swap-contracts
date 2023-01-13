@@ -11,7 +11,7 @@ use std::{
     token::transfer,
 };
 
-use exchange_abi::{Exchange};
+use pool_abi::Pool;
 use vault_abi::{Vault, VaultFee};
 
 enum Error {
@@ -84,9 +84,9 @@ impl Vault for Contract {
     }
 
     // Note: can call withdraw_protocol_fees on any contract, but there's no vulnerability to the vault
-    fn claim_fees(pool: b256) {
-        let exchange = abi(Exchange, pool);
-        let _amount_claimed = exchange.withdraw_protocol_fees(Identity::ContractId(contract_id()));
+    fn claim_fees(pool_address: b256) {
+        let pool = abi(Pool, pool_address);
+        let _amount_claimed = pool.withdraw_protocol_fees(Identity::ContractId(contract_id()));
     }
 
     #[storage(read, write)]

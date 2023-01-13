@@ -33,26 +33,16 @@ const _abi = {
     },
     {
       typeId: 3,
-      type: 'struct VaultFee',
+      type: 'enum Identity',
       components: [
         {
-          name: 'start_time',
+          name: 'Address',
+          type: 4,
+          typeArguments: null,
+        },
+        {
+          name: 'ContractId',
           type: 5,
-          typeArguments: null,
-        },
-        {
-          name: 'start_fee',
-          type: 4,
-          typeArguments: null,
-        },
-        {
-          name: 'current_fee',
-          type: 4,
-          typeArguments: null,
-        },
-        {
-          name: 'change_rate',
-          type: 4,
           typeArguments: null,
         },
       ],
@@ -60,13 +50,70 @@ const _abi = {
     },
     {
       typeId: 4,
+      type: 'struct Address',
+      components: [
+        {
+          name: 'value',
+          type: 1,
+          typeArguments: null,
+        },
+      ],
+      typeParameters: null,
+    },
+    {
+      typeId: 5,
+      type: 'struct ContractId',
+      components: [
+        {
+          name: 'value',
+          type: 1,
+          typeArguments: null,
+        },
+      ],
+      typeParameters: null,
+    },
+    {
+      typeId: 6,
+      type: 'struct VaultFee',
+      components: [
+        {
+          name: 'start_time',
+          type: 8,
+          typeArguments: null,
+        },
+        {
+          name: 'start_fee',
+          type: 7,
+          typeArguments: null,
+        },
+        {
+          name: 'current_fee',
+          type: 7,
+          typeArguments: null,
+        },
+        {
+          name: 'change_rate',
+          type: 7,
+          typeArguments: null,
+        },
+      ],
+      typeParameters: null,
+    },
+    {
+      typeId: 7,
       type: 'u16',
       components: null,
       typeParameters: null,
     },
     {
-      typeId: 5,
+      typeId: 8,
       type: 'u32',
+      components: null,
+      typeParameters: null,
+    },
+    {
+      typeId: 9,
+      type: 'u64',
       components: null,
       typeParameters: null,
     },
@@ -75,7 +122,7 @@ const _abi = {
     {
       inputs: [
         {
-          name: 'pool',
+          name: 'pool_address',
           type: 1,
           typeArguments: null,
         },
@@ -92,7 +139,7 @@ const _abi = {
       name: 'get_fees',
       output: {
         name: '',
-        type: 3,
+        type: 6,
         typeArguments: null,
       },
     },
@@ -100,12 +147,12 @@ const _abi = {
       inputs: [
         {
           name: 'start_fee',
-          type: 4,
+          type: 7,
           typeArguments: null,
         },
         {
           name: 'change_rate',
-          type: 4,
+          type: 7,
           typeArguments: null,
         },
       ],
@@ -116,10 +163,38 @@ const _abi = {
         typeArguments: null,
       },
     },
+    {
+      inputs: [
+        {
+          name: 'recipient',
+          type: 3,
+          typeArguments: null,
+        },
+        {
+          name: 'token',
+          type: 1,
+          typeArguments: null,
+        },
+      ],
+      name: 'withdraw',
+      output: {
+        name: '',
+        type: 9,
+        typeArguments: null,
+      },
+    },
   ],
   loggedTypes: [
     {
       logId: 0,
+      loggedType: {
+        name: '',
+        type: 2,
+        typeArguments: [],
+      },
+    },
+    {
+      logId: 1,
       loggedType: {
         name: '',
         type: 2,

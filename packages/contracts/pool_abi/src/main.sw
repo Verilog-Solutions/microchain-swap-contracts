@@ -93,7 +93,7 @@ pub struct Observation {
     price_1_cumulative_last: U256,
 }
 
-abi Exchange {
+abi Pool {
     ////////////////////
     // Read only
     ////////////////////

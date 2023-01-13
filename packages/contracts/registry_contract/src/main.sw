@@ -7,7 +7,7 @@ use std::{
     option::Option,
     storage::StorageMap,
 };
-use exchange_abi::Exchange;
+use pool_abi::Pool;
 
 enum Error {
     UnorderedTokens: (),
@@ -20,17 +20,17 @@ enum Error {
 
 abi PoolRegistry {
     #[storage(write, read)]
-    fn initialize(template_exchange_id: b256);
-    // Add exchange contract to the token
+    fn initialize(template_pool_id: b256);
+    // Add pool contract to the token
     #[storage(write, read)]
-    fn add_exchange_contract(exchange_id: b256);
-    // Get exchange contract for desired token
+    fn add_pool_contract(pool_id: b256);
+    // Get pool contract for desired token
     #[storage(read)]
-    fn get_exchange_contract(token_a: b256, token_b: b256) -> Option<b256>;
+    fn get_pool_contract(token_a: b256, token_b: b256) -> Option<b256>;
     #[storage(read)]
     fn is_pool(addr: b256) -> bool;
     #[storage(read)]
-    fn exchange_contract_root() -> b256;
+    fn pool_contract_root() -> b256;
     #[storage(read)]
     fn vault() -> b256;
 }
@@ -44,52 +44,52 @@ storage {
 
 impl PoolRegistry for Contract {
     #[storage(write, read)]
-    fn initialize(template_exchange_id: b256) {
+    fn initialize(template_pool_id: b256) {
         require(storage.expected_contract_root == ZERO_B256, Error::AlreadyInitialized);
-        let root = bytecode_root(ContractId::from(template_exchange_id));
+        let root = bytecode_root(ContractId::from(template_pool_id));
         storage.expected_contract_root = root;
 
-        let exchange = abi(Exchange, template_exchange_id);
-        let vault_info = exchange.get_vault_info();
+        let pool = abi(Pool, template_pool_id);
+        let vault_info = pool.get_vault_info();
         storage.expected_vault = vault_info.vault;
     }
 
     #[storage(write, read)]
-    fn add_exchange_contract(exchange_id: b256) {
-        let exchange = abi(Exchange, exchange_id);
+    fn add_pool_contract(pool_id: b256) {
+        let pool = abi(Pool, pool_id);
 
-        let root = bytecode_root(ContractId::from(exchange_id));
+        let root = bytecode_root(ContractId::from(pool_id));
         require(root == storage.expected_contract_root, Error::InvalidContractCode);
 
-        let (token0, token1) = exchange.get_tokens();
+        let (token0, token1) = pool.get_tokens();
         require(token0 < token1, Error::UnorderedTokens);
 
-        let existing_exchange = storage.pools.get((token0, token1));
-        require(existing_exchange == b256::min(), Error::AlreadyRegistered);
+        let existing_pool = storage.pools.get((token0, token1));
+        require(existing_pool == b256::min(), Error::AlreadyRegistered);
 
-        let pool_info = exchange.get_pool_info();
+        let pool_info = pool.get_pool_info();
         require(pool_info.lp_token_supply == 0, Error::PoolInitialized);
 
-        let vault_info = exchange.get_vault_info();
+        let vault_info = pool.get_vault_info();
         require(vault_info.vault == storage.expected_vault, Error::InvalidVault);
 
-        storage.pools.insert((token0, token1), exchange_id);
-        storage.is_pool.insert(exchange_id, true);
+        storage.pools.insert((token0, token1), pool_id);
+        storage.is_pool.insert(pool_id, true);
     }
 
     #[storage(read)]
-    fn get_exchange_contract(token_a: b256, token_b: b256) -> Option<b256> {
+    fn get_pool_contract(token_a: b256, token_b: b256) -> Option<b256> {
         let (token0, token1) = if token_a < token_b {
             (token_a, token_b)
         } else {
             (token_b, token_a)
         };
-        let exchange = storage.pools.get((token0, token1));
+        let pool = storage.pools.get((token0, token1));
 
-        if (exchange == b256::min()) {
+        if (pool == b256::min()) {
             Option::None
         } else {
-            Option::Some(exchange)
+            Option::Some(pool)
         }
     }
 
@@ -99,7 +99,7 @@ impl PoolRegistry for Contract {
     }
 
     #[storage(read)]
-    fn exchange_contract_root() -> b256 {
+    fn pool_contract_root() -> b256 {
         storage.expected_contract_root
     }
 

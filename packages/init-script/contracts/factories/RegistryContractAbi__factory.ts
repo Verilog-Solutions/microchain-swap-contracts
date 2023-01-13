@@ -50,6 +50,11 @@ const _abi = {
           typeArguments: null,
         },
         {
+          name: 'InvalidVault',
+          type: 0,
+          typeArguments: null,
+        },
+        {
           name: 'PoolInitialized',
           type: 0,
           typeArguments: null,
@@ -85,24 +90,15 @@ const _abi = {
     {
       inputs: [
         {
-          name: 'exchange_id',
+          name: 'pool_id',
           type: 1,
           typeArguments: null,
         },
       ],
-      name: 'add_exchange_contract',
+      name: 'add_pool_contract',
       output: {
         name: '',
         type: 0,
-        typeArguments: null,
-      },
-    },
-    {
-      inputs: [],
-      name: 'exchange_contract_root',
-      output: {
-        name: '',
-        type: 1,
         typeArguments: null,
       },
     },
@@ -119,7 +115,7 @@ const _abi = {
           typeArguments: null,
         },
       ],
-      name: 'get_exchange_contract',
+      name: 'get_pool_contract',
       output: {
         name: '',
         type: 4,
@@ -135,7 +131,7 @@ const _abi = {
     {
       inputs: [
         {
-          name: 'template_exchange_id',
+          name: 'template_pool_id',
           type: 1,
           typeArguments: null,
         },
@@ -159,6 +155,24 @@ const _abi = {
       output: {
         name: '',
         type: 2,
+        typeArguments: null,
+      },
+    },
+    {
+      inputs: [],
+      name: 'pool_contract_root',
+      output: {
+        name: '',
+        type: 1,
+        typeArguments: null,
+      },
+    },
+    {
+      inputs: [],
+      name: 'vault',
+      output: {
+        name: '',
+        type: 1,
         typeArguments: null,
       },
     },
@@ -198,6 +212,14 @@ const _abi = {
     },
     {
       logId: 4,
+      loggedType: {
+        name: '',
+        type: 3,
+        typeArguments: [],
+      },
+    },
+    {
+      logId: 5,
       loggedType: {
         name: '',
         type: 3,

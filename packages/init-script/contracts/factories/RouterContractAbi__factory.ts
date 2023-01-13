@@ -216,7 +216,7 @@ const _abi = {
     {
       inputs: [
         {
-          name: 'pool',
+          name: 'pool_address',
           type: 1,
           typeArguments: null,
         },
@@ -290,7 +290,7 @@ const _abi = {
     {
       inputs: [
         {
-          name: 'pool',
+          name: 'pool_address',
           type: 1,
           typeArguments: null,
         },
@@ -346,7 +346,7 @@ const _abi = {
     {
       inputs: [
         {
-          name: 'pool',
+          name: 'pool_address',
           type: 1,
           typeArguments: null,
         },

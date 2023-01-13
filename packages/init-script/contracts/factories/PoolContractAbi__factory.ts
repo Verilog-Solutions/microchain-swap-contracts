@@ -4,7 +4,7 @@
 
 import type { Provider, BaseWalletLocked, AbstractAddress } from 'fuels';
 import { Interface, Contract } from 'fuels';
-import type { ExchangeContractAbi, ExchangeContractAbiInterface } from '../ExchangeContractAbi';
+import type { PoolContractAbi, PoolContractAbiInterface } from '../PoolContractAbi';
 const _abi = {
   types: [
     {
@@ -598,15 +598,15 @@ const _abi = {
   messagesTypes: [],
 };
 
-export class ExchangeContractAbi__factory {
+export class PoolContractAbi__factory {
   static readonly abi = _abi;
-  static createInterface(): ExchangeContractAbiInterface {
-    return new Interface(_abi) as unknown as ExchangeContractAbiInterface;
+  static createInterface(): PoolContractAbiInterface {
+    return new Interface(_abi) as unknown as PoolContractAbiInterface;
   }
   static connect(
     id: string | AbstractAddress,
     walletOrProvider: BaseWalletLocked | Provider
-  ): ExchangeContractAbi {
-    return new Contract(id, _abi, walletOrProvider) as unknown as ExchangeContractAbi;
+  ): PoolContractAbi {
+    return new Contract(id, _abi, walletOrProvider) as unknown as PoolContractAbi;
   }
 }

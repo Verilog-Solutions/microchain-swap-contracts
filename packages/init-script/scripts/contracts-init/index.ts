@@ -2,7 +2,7 @@ import { bn, Wallet } from 'fuels';
 
 import '../../load.envs';
 import './loadDockerEnv';
-import { ExchangeContractAbi__factory, RegistryContractAbi__factory, RouterContractAbi__factory, TokenContractAbi__factory } from '../../contracts';
+import { PoolContractAbi__factory, RegistryContractAbi__factory, RouterContractAbi__factory, TokenContractAbi__factory } from '../../contracts';
 
 import { initializePool } from './initializePool';
 import { initializeTokenContract } from './initializeTokenContract';
@@ -37,8 +37,8 @@ async function main() {
 
   const routerContract = RouterContractAbi__factory.connect(ROUTER_CONTRACT_ID!, wallet);
   const registryContract = RegistryContractAbi__factory.connect(REGISTRY_CONTRACT_ID, wallet);
-  const exchange1Contract = ExchangeContractAbi__factory.connect(VITE_EXCHANGE_1_ID!, wallet);
-  const exchange2Contract = ExchangeContractAbi__factory.connect(VITE_EXCHANGE_2_ID!, wallet);
+  const exchange1Contract = PoolContractAbi__factory.connect(VITE_EXCHANGE_1_ID!, wallet);
+  const exchange2Contract = PoolContractAbi__factory.connect(VITE_EXCHANGE_2_ID!, wallet);
   const token1Contract = TokenContractAbi__factory.connect(VITE_TOKEN_1_ID!, wallet);
   const token2Contract = TokenContractAbi__factory.connect(VITE_TOKEN_2_ID!, wallet);
   const overrides = {

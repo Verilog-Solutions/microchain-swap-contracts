@@ -13,6 +13,8 @@ import type {
   BN,
 } from 'fuels';
 
+import type { Enum, Option } from './common';
+
 export type VaultFeeInput = {
   start_time: BigNumberish;
   start_fee: BigNumberish;
@@ -27,11 +29,30 @@ export type VaultFeeOutput = {
   change_rate: number;
 };
 
+export type AddressInput = { value: string };
+
+export type AddressOutput = { value: string };
+
+export type ContractIdInput = { value: string };
+
+export type ContractIdOutput = { value: string };
+
+export type IdentityInput = Enum<{
+  Address: AddressInput;
+  ContractId: ContractIdInput;
+}>;
+
+export type IdentityOutput = Enum<{
+  Address: AddressOutput;
+  ContractId: ContractIdOutput;
+}>;
+
 interface VaultContractAbiInterface extends Interface {
   functions: {
     claim_fees: FunctionFragment;
     get_fees: FunctionFragment;
     set_fees: FunctionFragment;
+    withdraw: FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: 'claim_fees', values: [string]): Uint8Array;
@@ -40,19 +61,23 @@ interface VaultContractAbiInterface extends Interface {
     functionFragment: 'set_fees',
     values: [BigNumberish, BigNumberish]
   ): Uint8Array;
+  encodeFunctionData(functionFragment: 'withdraw', values: [IdentityInput, string]): Uint8Array;
 
   decodeFunctionData(functionFragment: 'claim_fees', data: BytesLike): DecodedValue;
   decodeFunctionData(functionFragment: 'get_fees', data: BytesLike): DecodedValue;
   decodeFunctionData(functionFragment: 'set_fees', data: BytesLike): DecodedValue;
+  decodeFunctionData(functionFragment: 'withdraw', data: BytesLike): DecodedValue;
 }
 
 export class VaultContractAbi extends Contract {
   interface: VaultContractAbiInterface;
   functions: {
-    claim_fees: InvokeFunction<[pool: string], void>;
+    claim_fees: InvokeFunction<[pool_address: string], void>;
 
     get_fees: InvokeFunction<[], VaultFeeOutput>;
 
     set_fees: InvokeFunction<[start_fee: BigNumberish, change_rate: BigNumberish], void>;
+
+    withdraw: InvokeFunction<[recipient: IdentityInput, token: string], BN>;
   };
 }

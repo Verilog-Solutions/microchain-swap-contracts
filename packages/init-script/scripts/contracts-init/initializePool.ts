@@ -1,13 +1,13 @@
 import { bn, NativeAssetId } from 'fuels';
 
-import type { ExchangeContractAbi, RouterContractAbi, TokenContractAbi } from '../../contracts';
+import type { PoolContractAbi, RouterContractAbi, TokenContractAbi } from '../../contracts';
 
 const { TOKEN_AMOUNT, ETH_AMOUNT } = process.env;
 
 export async function initializePool(
   routerContract: RouterContractAbi,
   tokenContract: TokenContractAbi,
-  exchangeContract: ExchangeContractAbi,
+  exchangeContract: PoolContractAbi,
   overrides: any
 ) {
   const wallet = tokenContract.wallet!;

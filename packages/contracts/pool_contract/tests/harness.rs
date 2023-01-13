@@ -14,9 +14,9 @@ use tokio::time::{sleep, Duration};
 use test_helpers::{get_timestamp_and_call, get_wallets};
 
 ///////////////////////////////
-// Load the Exchange Contract abi
+// Load the Pool Contract abi
 ///////////////////////////////
-abigen!(Exchange, "./out/debug/exchange_contract-abi.json");
+abigen!(Pool, "./out/debug/pool_contract-abi.json");
 
 ///////////////////////////////
 // Load the Token Contract abi
@@ -37,7 +37,7 @@ struct Fixture {
     token_asset_id: AssetId,
     exchange_asset_id: AssetId,
     token_instance: TestToken,
-    exchange_instance: Exchange,
+    exchange_instance: Pool,
     vault_instance: Vault,
 }
 
@@ -71,7 +71,7 @@ async fn setup() -> Fixture {
 
     // Deploy contract and get ID
     let exchange_contract_id = Contract::deploy(
-        "../exchange_contract/out/debug/exchange_contract.bin",
+        "./out/debug/pool_contract.bin",
         &wallet,
         TxParameters::default(),
         StorageConfiguration::with_manual_storage(Some(storage_vec)),
@@ -88,7 +88,7 @@ async fn setup() -> Fixture {
     .await
     .unwrap();
 
-    let exchange_instance = Exchange::new(exchange_contract_id.clone(), wallet.clone());
+    let exchange_instance = Pool::new(exchange_contract_id.clone(), wallet.clone());
     let token_instance = TestToken::new(token_contract_id.clone(), wallet.clone());
     let vault_instance = Vault::new(vault_contract_id.clone(), wallet.clone());
 

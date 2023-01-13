@@ -11,7 +11,7 @@ use std::str::FromStr;
 ///////////////////////////////
 abigen!(RegistryBuilder, "out/debug/registry_contract-abi.json");
 
-abigen!(Exchange, "../exchange_contract/out/debug/exchange_contract-abi.json");
+abigen!(Pool, "../pool_contract/out/debug/pool_contract-abi.json");
 
 abigen!(
     TestToken,
@@ -21,7 +21,7 @@ abigen!(
 const ZERO_B256: Bits256 = Bits256([0; 32]);
 
 #[tokio::test]
-async fn register_exchange() {
+async fn register_pool() {
     // Provider and Wallet
     let wallet = launch_provider_and_get_wallet().await;
 
@@ -54,8 +54,8 @@ async fn register_exchange() {
     ];
 
     // Deploy contract and get ID
-    let exchange_contract_id = Contract::deploy_with_parameters(
-        "../exchange_contract/out/debug/exchange_contract.bin",
+    let pool_contract_id = Contract::deploy_with_parameters(
+        "../pool_contract/out/debug/pool_contract.bin",
         &wallet,
         TxParameters::default(),
         StorageConfiguration::with_manual_storage(Some(storage_vec)),
@@ -64,23 +64,23 @@ async fn register_exchange() {
     .await
     .unwrap();
 
-    let root = registry_instance.methods().exchange_contract_root().simulate().await.unwrap();
+    let root = registry_instance.methods().pool_contract_root().simulate().await.unwrap();
     assert_eq!(root.value, ZERO_B256, "Registry should be uninitialized");
 
     registry_instance
         .methods()
-        .initialize(Bits256(exchange_contract_id.clone().hash().into()))
-        .set_contracts(&[exchange_contract_id.clone()])
+        .initialize(Bits256(pool_contract_id.clone().hash().into()))
+        .set_contracts(&[pool_contract_id.clone()])
         .call()
         .await
         .unwrap();
 
-    let root = registry_instance.methods().exchange_contract_root().simulate().await.unwrap();
+    let root = registry_instance.methods().pool_contract_root().simulate().await.unwrap();
     assert_ne!(root.value, ZERO_B256, "Registry should be initialized");
 
     let result = registry_instance
         .methods()
-        .is_pool(Bits256(exchange_contract_id.hash().into()))
+        .is_pool(Bits256(pool_contract_id.hash().into()))
         .call()
         .await
         .unwrap();
@@ -89,8 +89,8 @@ async fn register_exchange() {
     // Test storage
     registry_instance
         .methods()
-        .add_exchange_contract(Bits256(exchange_contract_id.hash().into()))
-        .set_contracts(&[exchange_contract_id.clone()])
+        .add_pool_contract(Bits256(pool_contract_id.hash().into()))
+        .set_contracts(&[pool_contract_id.clone()])
         .call()
         .await
         .unwrap();
@@ -98,25 +98,25 @@ async fn register_exchange() {
     // Test retrieval (normal)
     let result = registry_instance
         .methods()
-        .get_exchange_contract(Bits256(token_id_1.into()), Bits256(token_id_2.into()))
+        .get_pool_contract(Bits256(token_id_1.into()), Bits256(token_id_2.into()))
         .call()
         .await
         .unwrap();
-    assert_eq!(result.value, Some(Bits256(exchange_contract_id.hash().into())));
+    assert_eq!(result.value, Some(Bits256(pool_contract_id.hash().into())));
 
     // Test retrieval (reversed order)
     let result = registry_instance
         .methods()
-        .get_exchange_contract(Bits256(token_id_2.into()), Bits256(token_id_1.into()))
+        .get_pool_contract(Bits256(token_id_2.into()), Bits256(token_id_1.into()))
         .call()
         .await
         .unwrap();
-    assert_eq!(result.value, Some(Bits256(exchange_contract_id.hash().into())));
+    assert_eq!(result.value, Some(Bits256(pool_contract_id.hash().into())));
 
     // Test retrieval (non-existent)
     let result = registry_instance
         .methods()
-        .get_exchange_contract(Bits256(token_id_1.into()), Bits256(token_id_nonexistent.into()))
+        .get_pool_contract(Bits256(token_id_1.into()), Bits256(token_id_nonexistent.into()))
         .call()
         .await
         .unwrap();
@@ -124,7 +124,7 @@ async fn register_exchange() {
 
     let result = registry_instance
         .methods()
-        .is_pool(Bits256(exchange_contract_id.hash().into()))
+        .is_pool(Bits256(pool_contract_id.hash().into()))
         .call()
         .await
         .unwrap();
@@ -161,8 +161,8 @@ async fn unordered_tokens_should_fail() {
     ];
 
     // Deploy contract and get ID
-    let exchange_contract_id = Contract::deploy_with_parameters(
-        "../exchange_contract/out/debug/exchange_contract.bin",
+    let pool_contract_id = Contract::deploy_with_parameters(
+        "../pool_contract/out/debug/pool_contract.bin",
         &wallet,
         TxParameters::default(),
         StorageConfiguration::with_manual_storage(Some(storage_vec)),
@@ -173,8 +173,8 @@ async fn unordered_tokens_should_fail() {
 
     registry_instance
         .methods()
-        .initialize(Bits256(exchange_contract_id.hash().into()))
-        .set_contracts(&[exchange_contract_id.clone()])
+        .initialize(Bits256(pool_contract_id.hash().into()))
+        .set_contracts(&[pool_contract_id.clone()])
         .call()
         .await
         .unwrap();
@@ -182,8 +182,8 @@ async fn unordered_tokens_should_fail() {
     // Test storage
     let is_err = registry_instance
         .methods()
-        .add_exchange_contract(Bits256(exchange_contract_id.hash().into()))
-        .set_contracts(&[exchange_contract_id.clone()])
+        .add_pool_contract(Bits256(pool_contract_id.hash().into()))
+        .set_contracts(&[pool_contract_id.clone()])
         .call()
         .await
         .is_err();
@@ -219,8 +219,8 @@ async fn test_invalid_contract() {
         StorageSlot::new(token1_slot, token_id_2),
     ];
 
-    let valid_exchange_contract_id = Contract::deploy_with_parameters(
-        "../exchange_contract/out/debug/exchange_contract.bin",
+    let valid_pool_contract_id = Contract::deploy_with_parameters(
+        "../pool_contract/out/debug/pool_contract.bin",
         &wallet,
         TxParameters::default(),
         StorageConfiguration::with_manual_storage(Some(storage_vec.clone())),
@@ -229,9 +229,9 @@ async fn test_invalid_contract() {
     .await
     .unwrap();
 
-    // Note: we're using a different binary here, so the code hash won't match the first exchange
-    let invalid_exchange_contract_id = Contract::deploy_with_parameters(
-        "./tests/modified_exchange_contract.bin",
+    // Note: we're using a different binary here, so the code hash won't match the first pool
+    let invalid_pool_contract_id = Contract::deploy_with_parameters(
+        "./tests/modified_pool_contract.bin",
         &wallet,
         TxParameters::default(),
         StorageConfiguration::with_manual_storage(Some(storage_vec)),
@@ -242,8 +242,8 @@ async fn test_invalid_contract() {
 
     registry_instance
         .methods()
-        .initialize(Bits256(valid_exchange_contract_id.hash().into()))
-        .set_contracts(&[valid_exchange_contract_id])
+        .initialize(Bits256(valid_pool_contract_id.hash().into()))
+        .set_contracts(&[valid_pool_contract_id])
         .call()
         .await
         .unwrap();
@@ -251,8 +251,8 @@ async fn test_invalid_contract() {
     // Test storage
     let is_err = registry_instance
         .methods()
-        .add_exchange_contract(Bits256(invalid_exchange_contract_id.hash().into()))
-        .set_contracts(&[invalid_exchange_contract_id.clone()])
+        .add_pool_contract(Bits256(invalid_pool_contract_id.hash().into()))
+        .set_contracts(&[invalid_pool_contract_id.clone()])
         .call()
         .await
         .is_err();
@@ -308,8 +308,8 @@ async fn initialized_pools_should_fail() {
     let storage_slot = StorageSlot::new(key, token_contract_id.hash());
 
     // Deploy contract and get ID
-    let exchange_contract_id = Contract::deploy_with_parameters(
-        "../exchange_contract/out/debug/exchange_contract.bin",
+    let pool_contract_id = Contract::deploy_with_parameters(
+        "../pool_contract/out/debug/pool_contract.bin",
         &wallet,
         TxParameters::default(),
         StorageConfiguration::with_manual_storage(Some(vec![storage_slot.clone()])),
@@ -318,13 +318,13 @@ async fn initialized_pools_should_fail() {
     .await
     .unwrap();
 
-    let exchange_instance = Exchange::new(exchange_contract_id.clone(), wallet.clone());
+    let pool_instance = Pool::new(pool_contract_id.clone(), wallet.clone());
 
     // Add Liquidity
 
     let _receipts = wallet
         .force_transfer_to_contract(
-            &exchange_contract_id,
+            &pool_contract_id,
             2000,
             BASE_ASSET_ID,
             TxParameters::default()
@@ -334,14 +334,14 @@ async fn initialized_pools_should_fail() {
     // Deposit some Token Asset
     let _receipts = wallet
         .force_transfer_to_contract(
-            &exchange_contract_id,
+            &pool_contract_id,
             2000,
             AssetId::new(*token_contract_id.hash()),
             TxParameters::default()
         )
         .await;
 
-    exchange_instance
+    pool_instance
         .methods()
         .add_liquidity(Identity::Address(wallet.address().into()))
         .append_variable_outputs(3)
@@ -364,8 +364,8 @@ async fn initialized_pools_should_fail() {
 
     registry_instance
         .methods()
-        .initialize(Bits256(exchange_contract_id.hash().into()))
-        .set_contracts(&[exchange_contract_id.clone()])
+        .initialize(Bits256(pool_contract_id.hash().into()))
+        .set_contracts(&[pool_contract_id.clone()])
         .call()
         .await
         .unwrap();
@@ -373,8 +373,8 @@ async fn initialized_pools_should_fail() {
     // Test storage
     let is_err = registry_instance
         .methods()
-        .add_exchange_contract(Bits256(exchange_contract_id.hash().into()))
-        .set_contracts(&[exchange_contract_id.clone()])
+        .add_pool_contract(Bits256(pool_contract_id.hash().into()))
+        .set_contracts(&[pool_contract_id.clone()])
         .call()
         .await
         .is_err();
@@ -411,8 +411,8 @@ async fn duplicate_pools_should_fail() {
     ];
 
     // Deploy contract and get ID
-    let exchange_contract_1_id = Contract::deploy_with_parameters(
-        "../exchange_contract/out/debug/exchange_contract.bin",
+    let pool_contract_1_id = Contract::deploy_with_parameters(
+        "../pool_contract/out/debug/pool_contract.bin",
         &wallet,
         TxParameters::default(),
         StorageConfiguration::with_manual_storage(Some(storage_vec.clone())),
@@ -422,8 +422,8 @@ async fn duplicate_pools_should_fail() {
     .unwrap();
 
     // Deploy contract and get ID
-    let exchange_contract_2_id = Contract::deploy_with_parameters(
-        "../exchange_contract/out/debug/exchange_contract.bin",
+    let pool_contract_2_id = Contract::deploy_with_parameters(
+        "../pool_contract/out/debug/pool_contract.bin",
         &wallet,
         TxParameters::default(),
         StorageConfiguration::with_manual_storage(Some(storage_vec)),
@@ -434,24 +434,24 @@ async fn duplicate_pools_should_fail() {
 
     registry_instance
         .methods()
-        .initialize(Bits256(exchange_contract_1_id.hash().into()))
-        .set_contracts(&[exchange_contract_1_id.clone()])
+        .initialize(Bits256(pool_contract_1_id.hash().into()))
+        .set_contracts(&[pool_contract_1_id.clone()])
         .call()
         .await
         .unwrap();
 
     registry_instance
         .methods()
-        .add_exchange_contract(Bits256(exchange_contract_1_id.hash().into()))
-        .set_contracts(&[exchange_contract_1_id.clone()])
+        .add_pool_contract(Bits256(pool_contract_1_id.hash().into()))
+        .set_contracts(&[pool_contract_1_id.clone()])
         .call()
         .await
         .unwrap();
 
     let is_err = registry_instance
         .methods()
-        .add_exchange_contract(Bits256(exchange_contract_2_id.hash().into()))
-        .set_contracts(&[exchange_contract_2_id.clone()])
+        .add_pool_contract(Bits256(pool_contract_2_id.hash().into()))
+        .set_contracts(&[pool_contract_2_id.clone()])
         .call()
         .await
         .is_err();

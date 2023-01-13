@@ -19,8 +19,8 @@ use std::{
     u256::U256,
 };
 
-use exchange_abi::{
-    Exchange,
+use pool_abi::{
+    Pool,
     FeeInfo,
     LiquidityAdded,
     LiquidityRemoved,
@@ -233,7 +233,7 @@ fn cache_vault_fees(vault: b256) {
 // ////////////////////////////////////////
 // // ABI definitions
 // ////////////////////////////////////////
-impl Exchange for Contract {
+impl Pool for Contract {
     #[storage(read, write)]
     fn initialize(new_vault: b256) {
         require(storage.vault == ZERO_B256, Error::AlreadyInitialized);

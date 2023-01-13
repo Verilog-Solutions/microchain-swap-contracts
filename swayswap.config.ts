@@ -52,7 +52,7 @@ export default createConfig({
     },
     {
       name: 'VITE_EXCHANGE_1_ID',
-      path: './packages/contracts/exchange_contract',
+      path: './packages/contracts/pool_contract',
       options: (contracts) => {
         const contractDeployed = contracts.find((c) => c.name === 'VITE_TOKEN_1_ID')!;
         return {
@@ -68,7 +68,7 @@ export default createConfig({
     },
     {
       name: 'VITE_EXCHANGE_2_ID',
-      path: './packages/contracts/exchange_contract',
+      path: './packages/contracts/pool_contract',
       options: (contracts) => {
         const contractDeployed = contracts.find((c) => c.name === 'VITE_TOKEN_2_ID')!;
         return {
@@ -84,6 +84,6 @@ export default createConfig({
     },
   ],
   onSuccess: (event) => {
-    replaceEventOnEnv(`./packages/app/${OUTPUT_ENV || getEnvName()}`, event);
+    replaceEventOnEnv(`./packages/init-script/${OUTPUT_ENV || getEnvName()}`, event);
   },
 });

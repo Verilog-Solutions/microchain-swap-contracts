@@ -27,7 +27,7 @@ use std::{
     u128::U128,
     vec::*,
 };
-use exchange_abi::Exchange;
+use pool_abi::Pool;
 
 use microchain_helpers::{get_input_price, get_output_price, quote};
 
@@ -70,16 +70,16 @@ abi Router {
 
 impl Router for Contract {
     fn add_liquidity(
-        pool: b256,
+        pool_address: b256,
         amount_0_desired: u64,
         amount_1_desired: u64,
         amount_0_min: u64,
         amount_1_min: u64,
         recipient: Identity,
     ) -> LiquidityOutput {
-        let exchange = abi(Exchange, pool);
-        let (token0, token1) = exchange.get_tokens();
-        let pool_info = exchange.get_pool_info();
+        let pool = abi(Pool, pool_address);
+        let (token0, token1) = pool.get_tokens();
+        let pool_info = pool.get_pool_info();
         let sender_identity = msg_sender().unwrap(); // Only used for returning "change"
         let mut amount_0 = 0;
         let mut amount_1 = 0;
@@ -103,10 +103,10 @@ impl Router for Contract {
             }
         }
 
-        force_transfer_to_contract(amount_0, ContractId::from(token0), ContractId::from(pool));
-        force_transfer_to_contract(amount_1, ContractId::from(token1), ContractId::from(pool));
+        force_transfer_to_contract(amount_0, ContractId::from(token0), ContractId::from(pool_address));
+        force_transfer_to_contract(amount_1, ContractId::from(token1), ContractId::from(pool_address));
 
-        let liquidity = exchange.add_liquidity(recipient);
+        let liquidity = pool.add_liquidity(recipient);
 
         let current_token_0_amount = this_balance(ContractId::from(token0));
         let current_token_1_amount = this_balance(ContractId::from(token1));
@@ -127,9 +127,9 @@ impl Router for Contract {
 
     fn remove_liquidity(amount_0_min: u64, amount_1_min: u64, recipient: Identity) -> LiquidityOutput {
         let input_asset: b256 = msg_asset_id().into();
-        let exchange = abi(Exchange, input_asset);
+        let pool = abi(Pool, input_asset);
 
-        let result = exchange.remove_liquidity {
+        let result = pool.remove_liquidity {
             asset_id: input_asset,
             coins: msg_amount(),
         }(recipient);
@@ -144,16 +144,16 @@ impl Router for Contract {
         }
     }
 
-    fn swap_exact_input(pool: b256, min_amount_out: u64, recipient: Identity) -> SwapOutput {
-        let exchange = abi(Exchange, pool);
+    fn swap_exact_input(pool_address: b256, min_amount_out: u64, recipient: Identity) -> SwapOutput {
+        let pool = abi(Pool, pool_address);
         let input_asset: b256 = msg_asset_id().into();
 
-        let (token0, token1) = exchange.get_tokens();
-        let pool_info = exchange.get_pool_info();
+        let (token0, token1) = pool.get_tokens();
+        let pool_info = pool.get_pool_info();
 
         require(token0 == input_asset || token1 == input_asset, Error::InvalidToken);
 
-        let fee_info = exchange.get_fee_info();
+        let fee_info = pool.get_fee_info();
         let mut input = msg_amount();
         if (fee_info.current_fee > 0) {
             let fee = (U128::from((0, input)) * U128::from((0, fee_info.current_fee)) / U128::from((0, 1_000_000))).as_u64().unwrap();
@@ -175,7 +175,7 @@ impl Router for Contract {
         let output_amount = if token0 == input_asset { out1 } else { out0 };
         require(output_amount >= min_amount_out, Error::InsufficentOutput);
 
-        exchange.swap {
+        pool.swap {
             asset_id: input_asset,
             coins: msg_amount(),
         }(out0, out1, recipient);
@@ -187,16 +187,16 @@ impl Router for Contract {
     }
 
     fn swap_exact_output(
-        pool: b256,
+        pool_address: b256,
         amount_out: u64,
         max_amount_in: u64,
         recipient: Identity,
     ) -> SwapOutput {
-        let exchange = abi(Exchange, pool);
+        let pool = abi(Pool, pool_address);
         let input_asset: b256 = msg_asset_id().into();
 
-        let (token0, token1) = exchange.get_tokens();
-        let pool_info = exchange.get_pool_info();
+        let (token0, token1) = pool.get_tokens();
+        let pool_info = pool.get_pool_info();
 
         require(token0 == input_asset || token1 == input_asset, Error::InvalidToken);
 
@@ -214,7 +214,7 @@ impl Router for Contract {
             )
         };
 
-        let fee_info = exchange.get_fee_info();
+        let fee_info = pool.get_fee_info();
         let mut input_amount_with_fee = input_amount;
         if (fee_info.current_fee > 0) {
             let percision = U128::from((0, 1_000_000));
@@ -225,7 +225,7 @@ impl Router for Contract {
 
         require(input_amount_with_fee <= max_amount_in, Error::ExcessiveInput);
 
-        exchange.swap {
+        pool.swap {
             asset_id: input_asset,
             coins: input_amount_with_fee,
         }(out0, out1, recipient);
@@ -255,13 +255,13 @@ impl Router for Contract {
         let mut i = 0;
         while i < pools.len() {
             let pool_id = pools.get(i).unwrap();
-            let exchange = abi(Exchange, pool_id);
-            let (token0, token1) = exchange.get_tokens();
-            let pool_info = exchange.get_pool_info();
+            let pool = abi(Pool, pool_id);
+            let (token0, token1) = pool.get_tokens();
+            let pool_info = pool.get_pool_info();
 
             require(token0 == input_asset || token1 == input_asset, Error::InvalidToken);
 
-            let fee_info = exchange.get_fee_info();
+            let fee_info = pool.get_fee_info();
             let mut input = output_amount;
             if (fee_info.current_fee > 0) {
                 let fee = (U128::from((0, input)) * U128::from((0, fee_info.current_fee)) / U128::from((0, 1_000_000))).as_u64().unwrap();
@@ -287,13 +287,13 @@ impl Router for Contract {
             };
 
             if i == 0 {
-                exchange.swap {
+                pool.swap {
                     asset_id: input_asset,
                     coins: msg_amount(),
                 }(out0, out1, swap_recipient);
             } else {
                 // No need to include assets, the last swap already sent them
-                exchange.swap(out0, out1, swap_recipient);
+                pool.swap(out0, out1, swap_recipient);
             }
 
             let (_output_amount, _input_asset) = if token0 == input_asset {
@@ -334,8 +334,8 @@ impl Router for Contract {
         let mut i = 0;
         while i < pools.len() {
             let pool_id = pools.get(i).unwrap();
-            let exchange = abi(Exchange, pool_id);
-            let (token0, token1) = exchange.get_tokens();
+            let pool = abi(Pool, pool_id);
+            let (token0, token1) = pool.get_tokens();
             let input_asset = input_assets.get(i).unwrap();
             require(token0 == input_asset || token1 == input_asset, Error::InvalidToken);
 
@@ -359,9 +359,9 @@ impl Router for Contract {
             // TODO: should we cache this in memory since it's read again in the next loop?
             let pool_id = pools.get(j).unwrap();
             let input_asset = input_assets.get(j).unwrap();
-            let exchange = abi(Exchange, pool_id);
-            let (token0, token1) = exchange.get_tokens();
-            let pool_info = exchange.get_pool_info();
+            let pool = abi(Pool, pool_id);
+            let (token0, token1) = pool.get_tokens();
+            let pool_info = pool.get_pool_info();
             let pool_output_amount = output_amounts.get(j).unwrap();
 
             let input_amount = if token0 == input_asset {
@@ -370,7 +370,7 @@ impl Router for Contract {
                 get_output_price(pool_output_amount, pool_info.token_1_reserve, pool_info.token_0_reserve)
             };
 
-            let fee_info = exchange.get_fee_info();
+            let fee_info = pool.get_fee_info();
             let mut input_amount_with_fee = input_amount;
             if (fee_info.current_fee > 0) {
                 let percision = U128::from((0, 1_000_000));
@@ -392,9 +392,9 @@ impl Router for Contract {
         i = 0;
         while i < pools.len() {
             let pool_id = pools.get(i).unwrap();
-            let exchange = abi(Exchange, pool_id);
-            let (token0, token1) = exchange.get_tokens();
-            let pool_info = exchange.get_pool_info();
+            let pool = abi(Pool, pool_id);
+            let (token0, token1) = pool.get_tokens();
+            let pool_info = pool.get_pool_info();
 
             let input_asset = input_assets.get(i).unwrap();
             let input_amount = input_amounts.get(i).unwrap();
@@ -413,7 +413,7 @@ impl Router for Contract {
             };
 
             if i == 0 {
-                exchange.swap {
+                pool.swap {
                     asset_id: input_asset,
                     coins: input_amount,
                 }(out0, out1, swap_recipient);
@@ -424,7 +424,7 @@ impl Router for Contract {
                 }
             } else {
                 // No need to include assets, the last swap already sent them
-                exchange.swap(out0, out1, swap_recipient);
+                pool.swap(out0, out1, swap_recipient);
             }
 
             i += 1;

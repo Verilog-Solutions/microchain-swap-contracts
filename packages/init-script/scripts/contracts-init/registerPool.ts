@@ -1,12 +1,12 @@
 import { bn, NativeAssetId, ZeroBytes32 } from 'fuels';
 
-import type { ExchangeContractAbi, RegistryContractAbi } from '../../contracts';
+import type { PoolContractAbi, RegistryContractAbi } from '../../contracts';
 
 const { TOKEN_AMOUNT, ETH_AMOUNT } = process.env;
 
 export async function registerPool(
   registryContract: RegistryContractAbi,
-  exchangeContract: ExchangeContractAbi,
+  exchangeContract: PoolContractAbi,
   overrides: any
 ) {
   console.log('Registering pool');

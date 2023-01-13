@@ -11,7 +11,7 @@ use test_helpers::{get_wallets};
 // Load the Router Script ABI abi
 ///////////////////////////////
 abigen!(Router, "./out/debug/router_contract-abi.json");
-abigen!(Exchange, "../exchange_contract/out/debug/exchange_contract-abi.json");
+abigen!(Pool, "../pool_contract/out/debug/pool_contract-abi.json");
 abigen!(TestToken, "../token_contract/out/debug/token_contract-abi.json");
 abigen!(Vault, "../vault_contract/out/debug/vault_contract-abi.json");
 
@@ -28,16 +28,16 @@ struct Fixture {
     token_a_contract_id: Bech32ContractId,
     token_a_asset_id: AssetId,
     token_a_instance: TestToken,
-    exchange_a_contract_id: Bech32ContractId,
-    exchange_a_asset_id: AssetId,
-    exchange_a_instance: Exchange,
+    pool_a_contract_id: Bech32ContractId,
+    pool_a_asset_id: AssetId,
+    pool_a_instance: Pool,
 
     token_b_contract_id: Bech32ContractId,
     token_b_asset_id: AssetId,
     token_b_instance: TestToken,
-    exchange_b_contract_id: Bech32ContractId,
-    exchange_b_asset_id: AssetId,
-    exchange_b_instance: Exchange,
+    pool_b_contract_id: Bech32ContractId,
+    pool_b_asset_id: AssetId,
+    pool_b_instance: Pool,
 
     router_contract_id: Bech32ContractId,
     router_instance: Router,
@@ -82,8 +82,8 @@ async fn setup() -> Fixture {
     ];
 
     // Deploy contract and get ID
-    let exchange_a_contract_id = Contract::deploy_with_parameters(
-        "../exchange_contract/out/debug/exchange_contract.bin",
+    let pool_a_contract_id = Contract::deploy_with_parameters(
+        "../pool_contract/out/debug/pool_contract.bin",
         &wallet,
         TxParameters::default(),
         StorageConfiguration::with_manual_storage(Some(storage_vec)),
@@ -98,8 +98,8 @@ async fn setup() -> Fixture {
     ];
 
     // Deploy contract and get ID
-    let exchange_b_contract_id = Contract::deploy_with_parameters(
-        "../exchange_contract/out/debug/exchange_contract.bin",
+    let pool_b_contract_id = Contract::deploy_with_parameters(
+        "../pool_contract/out/debug/pool_contract.bin",
         &wallet,
         TxParameters::default(),
         StorageConfiguration::with_manual_storage(Some(storage_vec)),
@@ -126,9 +126,9 @@ async fn setup() -> Fixture {
     .await
     .unwrap();
 
-    let exchange_a_instance = Exchange::new(exchange_a_contract_id.clone(), wallet.clone());
+    let pool_a_instance = Pool::new(pool_a_contract_id.clone(), wallet.clone());
     let token_a_instance = TestToken::new(token_a_contract_id.clone(), wallet.clone());
-    let exchange_b_instance = Exchange::new(exchange_b_contract_id.clone(), wallet.clone());
+    let pool_b_instance = Pool::new(pool_b_contract_id.clone(), wallet.clone());
     let token_b_instance = TestToken::new(token_b_contract_id.clone(), wallet.clone());
     let router_instance = Router::new(router_contract_id.clone(), wallet.clone());
     let vault_instance = Vault::new(vault_contract_id.clone(), wallet.clone());
@@ -169,7 +169,7 @@ async fn setup() -> Fixture {
         .await
         .unwrap();
 
-    exchange_a_instance
+    pool_a_instance
         .methods()
         .initialize(Bits256(vault_contract_id.hash().into()))
         .set_contracts(&[vault_contract_id.clone()])
@@ -177,7 +177,7 @@ async fn setup() -> Fixture {
         .await
         .unwrap();
 
-    exchange_b_instance
+    pool_b_instance
         .methods()
         .initialize(Bits256(vault_contract_id.hash().into()))
         .set_contracts(&[vault_contract_id.clone()])
@@ -191,16 +191,16 @@ async fn setup() -> Fixture {
         token_a_contract_id: token_a_contract_id.clone(),
         token_a_asset_id: AssetId::new(*token_a_contract_id.hash()),
         token_a_instance: token_a_instance,
-        exchange_a_contract_id: exchange_a_contract_id.clone(),
-        exchange_a_instance: exchange_a_instance,
-        exchange_a_asset_id: AssetId::new(*exchange_a_contract_id.hash()),
+        pool_a_contract_id: pool_a_contract_id.clone(),
+        pool_a_instance: pool_a_instance,
+        pool_a_asset_id: AssetId::new(*pool_a_contract_id.hash()),
 
         token_b_contract_id: token_b_contract_id.clone(),
         token_b_asset_id: AssetId::new(*token_b_contract_id.hash()),
         token_b_instance: token_b_instance,
-        exchange_b_contract_id: exchange_b_contract_id.clone(),
-        exchange_b_instance: exchange_b_instance,
-        exchange_b_asset_id: AssetId::new(*exchange_b_contract_id.hash()),
+        pool_b_contract_id: pool_b_contract_id.clone(),
+        pool_b_instance: pool_b_instance,
+        pool_b_asset_id: AssetId::new(*pool_b_contract_id.hash()),
 
         vault_contract_id: vault_contract_id,
         vault_instance: vault_instance,
@@ -214,7 +214,7 @@ async fn setup() -> Fixture {
 async fn add_pool_a_liquidity(fixture: &Fixture, token_0_amount: u64, token_1_amount: u64) {
     let _receipts = fixture.wallet
         .force_transfer_to_contract(
-            &fixture.exchange_a_contract_id,
+            &fixture.pool_a_contract_id,
             token_0_amount,
             BASE_ASSET_ID,
             TxParameters::default()
@@ -224,14 +224,14 @@ async fn add_pool_a_liquidity(fixture: &Fixture, token_0_amount: u64, token_1_am
     // Deposit some Token Asset
     let _receipts = fixture.wallet
         .force_transfer_to_contract(
-            &fixture.exchange_a_contract_id,
+            &fixture.pool_a_contract_id,
             token_1_amount,
             fixture.token_a_asset_id.clone(),
             TxParameters::default()
         )
         .await;
 
-    let result = fixture.exchange_a_instance
+    let result = fixture.pool_a_instance
         .methods()
         .add_liquidity(Identity::Address(fixture.wallet.address().into()))
         .append_variable_outputs(2)
@@ -254,7 +254,7 @@ async fn add_pool_a_liquidity(fixture: &Fixture, token_0_amount: u64, token_1_am
 async fn add_pool_b_liquidity(fixture: &Fixture, token_0_amount: u64, token_1_amount: u64) {
     let _receipts = fixture.wallet
         .force_transfer_to_contract(
-            &fixture.exchange_b_contract_id,
+            &fixture.pool_b_contract_id,
             token_0_amount,
             fixture.token_a_asset_id.clone(),
             TxParameters::default()
@@ -264,14 +264,14 @@ async fn add_pool_b_liquidity(fixture: &Fixture, token_0_amount: u64, token_1_am
     // Deposit some Token Asset
     let _receipts = fixture.wallet
         .force_transfer_to_contract(
-            &fixture.exchange_b_contract_id,
+            &fixture.pool_b_contract_id,
             token_1_amount,
             fixture.token_b_asset_id.clone(),
             TxParameters::default()
         )
         .await;
 
-    let result = fixture.exchange_b_instance
+    let result = fixture.pool_b_instance
         .methods()
         .add_liquidity(Identity::Address(fixture.wallet.address().into()))
         .append_variable_outputs(2)
@@ -321,7 +321,7 @@ async fn add_liquidity() {
     let result = fixture.router_instance
         .methods()
         .add_liquidity(
-            Bits256(fixture.exchange_a_contract_id.hash().into()),
+            Bits256(fixture.pool_a_contract_id.hash().into()),
             token_0_amount,
             token_1_amount,
             0,
@@ -338,7 +338,7 @@ async fn add_liquidity() {
             None,
             Some(100_000_000),
         ))
-        .set_contracts(&[fixture.exchange_a_contract_id.clone()])
+        .set_contracts(&[fixture.pool_a_contract_id.clone()])
         .append_variable_outputs(3)
         .call()
         .await
@@ -348,7 +348,7 @@ async fn add_liquidity() {
     assert_eq!(result.value.amount_1, token_1_amount);
     assert_eq!(result.value.liquidity, expected_liquidity - MINIMUM_LIQUIDITY);
 
-    let lp_tokens = fixture.wallet.get_asset_balance(&fixture.exchange_a_asset_id).await.unwrap();
+    let lp_tokens = fixture.wallet.get_asset_balance(&fixture.pool_a_asset_id).await.unwrap();
     assert_eq!(lp_tokens, expected_liquidity - MINIMUM_LIQUIDITY);
 
     // Add additional liquidity
@@ -374,7 +374,7 @@ async fn add_liquidity() {
     let is_err = fixture.router_instance
         .methods()
         .add_liquidity(
-            Bits256(fixture.exchange_a_contract_id.hash().into()),
+            Bits256(fixture.pool_a_contract_id.hash().into()),
             token_0_amount,
             token_1_amount,
             token_0_amount + 1,
@@ -391,7 +391,7 @@ async fn add_liquidity() {
             None,
             Some(100_000_000),
         ))
-        .set_contracts(&[fixture.exchange_a_contract_id.clone()])
+        .set_contracts(&[fixture.pool_a_contract_id.clone()])
         .append_variable_outputs(3)
         .call()
         .await
@@ -404,7 +404,7 @@ async fn add_liquidity() {
     let result = fixture.router_instance
         .methods()
         .add_liquidity(
-            Bits256(fixture.exchange_a_contract_id.hash().into()),
+            Bits256(fixture.pool_a_contract_id.hash().into()),
             token_0_amount,
             token_1_amount,
             token_0_min,
@@ -421,7 +421,7 @@ async fn add_liquidity() {
             None,
             Some(100_000_000),
         ))
-        .set_contracts(&[fixture.exchange_a_contract_id.clone()])
+        .set_contracts(&[fixture.pool_a_contract_id.clone()])
         .append_variable_outputs(3)
         .call()
         .await
@@ -431,7 +431,7 @@ async fn add_liquidity() {
     assert_eq!(result.value.amount_1, token_1_amount);
     assert_eq!(result.value.liquidity, expected_liquidity);
 
-    let lp_tokens = fixture.wallet.get_asset_balance(&fixture.exchange_a_asset_id).await.unwrap();
+    let lp_tokens = fixture.wallet.get_asset_balance(&fixture.pool_a_asset_id).await.unwrap();
     assert_eq!(lp_tokens, expected_liquidity * 2 - MINIMUM_LIQUIDITY);
 }
 
@@ -446,7 +446,7 @@ async fn remove_liquidity() {
     add_pool_a_liquidity(&fixture, token_0_amount, token_1_amount)
         .await;
 
-    let lp_tokens = fixture.wallet.get_asset_balance(&fixture.exchange_a_asset_id).await.unwrap();
+    let lp_tokens = fixture.wallet.get_asset_balance(&fixture.pool_a_asset_id).await.unwrap();
     assert_eq!(lp_tokens, expected_liquidity);
 
     // Remove liquidity
@@ -459,7 +459,7 @@ async fn remove_liquidity() {
         .remove_liquidity(0, 0, Identity::Address(fixture.wallet.address().into()))
         .call_params(CallParameters::new(
             Some(expected_liquidity),
-            Some(fixture.exchange_a_asset_id.clone()),
+            Some(fixture.pool_a_asset_id.clone()),
             None
         ))
         .tx_params(TxParameters {
@@ -467,13 +467,13 @@ async fn remove_liquidity() {
             gas_limit: 100_000_000,
             maturity: 0,
         })
-        .set_contracts(&[fixture.exchange_a_contract_id.clone()])
+        .set_contracts(&[fixture.pool_a_contract_id.clone()])
         .append_variable_outputs(2)
         .call()
         .await
         .unwrap();
 
-    let lp_balance = fixture.wallet.get_asset_balance(&fixture.exchange_a_asset_id.clone()).await.unwrap();
+    let lp_balance = fixture.wallet.get_asset_balance(&fixture.pool_a_asset_id.clone()).await.unwrap();
     assert_eq!(lp_balance, 0);
 
     let token_0_end_balance = fixture.wallet.get_asset_balance(&BASE_ASSET_ID).await.unwrap();
@@ -500,7 +500,7 @@ async fn swap_exact_input_0() {
     let is_err = fixture.router_instance
         .methods()
         .swap_exact_input(
-            Bits256(fixture.exchange_a_contract_id.hash().into()),
+            Bits256(fixture.pool_a_contract_id.hash().into()),
             expected_amount + 1,
             Identity::Address(fixture.wallet.address().into()),
         )
@@ -514,7 +514,7 @@ async fn swap_exact_input_0() {
             None,
             Some(100_000_000),
         ))
-        .set_contracts(&[fixture.exchange_a_contract_id.clone()])
+        .set_contracts(&[fixture.pool_a_contract_id.clone()])
         .append_variable_outputs(1)
         .call()
         .await
@@ -524,7 +524,7 @@ async fn swap_exact_input_0() {
     let result = fixture.router_instance
         .methods()
         .swap_exact_input(
-            Bits256(fixture.exchange_a_contract_id.hash().into()),
+            Bits256(fixture.pool_a_contract_id.hash().into()),
             expected_amount,
             Identity::Address(fixture.wallet.address().into()),
         )
@@ -538,7 +538,7 @@ async fn swap_exact_input_0() {
             None,
             Some(100_000_000),
         ))
-        .set_contracts(&[fixture.exchange_a_contract_id.clone()])
+        .set_contracts(&[fixture.pool_a_contract_id.clone()])
         .append_variable_outputs(1)
         .call()
         .await
@@ -582,7 +582,7 @@ async fn swap_exact_output_0() {
     let is_err = fixture.router_instance
         .methods()
         .swap_exact_output(
-            Bits256(fixture.exchange_a_contract_id.hash().into()),
+            Bits256(fixture.pool_a_contract_id.hash().into()),
             output_amount,
             expected_input - 1,
             Identity::Address(fixture.wallet.address().into()),
@@ -597,7 +597,7 @@ async fn swap_exact_output_0() {
             None,
             Some(100_000_000),
         ))
-        .set_contracts(&[fixture.exchange_a_contract_id.clone()])
+        .set_contracts(&[fixture.pool_a_contract_id.clone()])
         .append_variable_outputs(3)
         .call()
         .await
@@ -607,7 +607,7 @@ async fn swap_exact_output_0() {
     let result = fixture.router_instance
         .methods()
         .swap_exact_output(
-            Bits256(fixture.exchange_a_contract_id.hash().into()),
+            Bits256(fixture.pool_a_contract_id.hash().into()),
             output_amount,
             expected_input,
             Identity::Address(fixture.wallet.address().into()),
@@ -622,7 +622,7 @@ async fn swap_exact_output_0() {
             None,
             Some(100_000_000),
         ))
-        .set_contracts(&[fixture.exchange_a_contract_id.clone()])
+        .set_contracts(&[fixture.pool_a_contract_id.clone()])
         .append_variable_outputs(3)
         .call()
         .await
@@ -672,8 +672,8 @@ async fn swap_exact_input_multi() {
         .methods()
         .swap_exact_input_multihop(
             vec![
-                Bits256(fixture.exchange_a_contract_id.hash().into()),
-                Bits256(fixture.exchange_b_contract_id.hash().into()),
+                Bits256(fixture.pool_a_contract_id.hash().into()),
+                Bits256(fixture.pool_b_contract_id.hash().into()),
             ],
             expected_amount + 1,
             Identity::Address(fixture.wallet.address().into()),
@@ -689,8 +689,8 @@ async fn swap_exact_input_multi() {
             Some(100_000_000),
         ))
         .set_contracts(&[
-            fixture.exchange_a_contract_id.clone(),
-            fixture.exchange_b_contract_id.clone(),
+            fixture.pool_a_contract_id.clone(),
+            fixture.pool_b_contract_id.clone(),
         ])
         .append_variable_outputs(1)
         .call()
@@ -702,8 +702,8 @@ async fn swap_exact_input_multi() {
         .methods()
         .swap_exact_input_multihop(
             vec![
-                Bits256(fixture.exchange_a_contract_id.hash().into()),
-                Bits256(fixture.exchange_b_contract_id.hash().into()),
+                Bits256(fixture.pool_a_contract_id.hash().into()),
+                Bits256(fixture.pool_b_contract_id.hash().into()),
             ],
             expected_amount,
             Identity::Address(fixture.wallet.address().into()),
@@ -719,8 +719,8 @@ async fn swap_exact_input_multi() {
             Some(100_000_000),
         ))
         .set_contracts(&[
-            fixture.exchange_a_contract_id.clone(),
-            fixture.exchange_b_contract_id.clone(),
+            fixture.pool_a_contract_id.clone(),
+            fixture.pool_b_contract_id.clone(),
         ])
         .append_variable_outputs(1)
         .call()
@@ -773,8 +773,8 @@ async fn swap_exact_output_multi() {
         .methods()
         .swap_exact_output_multihop(
             vec![
-                Bits256(fixture.exchange_a_contract_id.hash().into()),
-                Bits256(fixture.exchange_b_contract_id.hash().into()),
+                Bits256(fixture.pool_a_contract_id.hash().into()),
+                Bits256(fixture.pool_b_contract_id.hash().into()),
             ],
             output_amount,
             expected_input - 1,
@@ -791,8 +791,8 @@ async fn swap_exact_output_multi() {
             Some(100_000_000),
         ))
         .set_contracts(&[
-            fixture.exchange_a_contract_id.clone(),
-            fixture.exchange_b_contract_id.clone(),
+            fixture.pool_a_contract_id.clone(),
+            fixture.pool_b_contract_id.clone(),
         ])
         .append_variable_outputs(2)
         .call()
@@ -804,8 +804,8 @@ async fn swap_exact_output_multi() {
         .methods()
         .swap_exact_output_multihop(
             vec![
-                Bits256(fixture.exchange_a_contract_id.hash().into()),
-                Bits256(fixture.exchange_b_contract_id.hash().into()),
+                Bits256(fixture.pool_a_contract_id.hash().into()),
+                Bits256(fixture.pool_b_contract_id.hash().into()),
             ],
             output_amount,
             expected_input,
@@ -822,8 +822,8 @@ async fn swap_exact_output_multi() {
             Some(100_000_000),
         ))
         .set_contracts(&[
-            fixture.exchange_a_contract_id.clone(),
-            fixture.exchange_b_contract_id.clone(),
+            fixture.pool_a_contract_id.clone(),
+            fixture.pool_b_contract_id.clone(),
         ])
         .append_variable_outputs(2)
         .call()
@@ -861,7 +861,7 @@ async fn with_protocol_fees_swap_exact_input_0() {
         .await
         .unwrap();
 
-    fixture.exchange_a_instance
+    fixture.pool_a_instance
         .methods()
         .cache_vault_fees()
         .set_contracts(&[fixture.vault_contract_id.clone()])
@@ -881,7 +881,7 @@ async fn with_protocol_fees_swap_exact_input_0() {
         .await
         .unwrap();
 
-    fixture.exchange_a_instance
+    fixture.pool_a_instance
         .methods()
         .cache_vault_fees()
         .set_contracts(&[fixture.vault_contract_id.clone()])
@@ -898,7 +898,7 @@ async fn with_protocol_fees_swap_exact_input_0() {
     let result = fixture.router_instance
         .methods()
         .swap_exact_input(
-            Bits256(fixture.exchange_a_contract_id.hash().into()),
+            Bits256(fixture.pool_a_contract_id.hash().into()),
             expected_amount,
             Identity::Address(fixture.wallet.address().into()),
         )
@@ -912,7 +912,7 @@ async fn with_protocol_fees_swap_exact_input_0() {
             None,
             Some(100_000_000),
         ))
-        .set_contracts(&[fixture.exchange_a_contract_id.clone()])
+        .set_contracts(&[fixture.pool_a_contract_id.clone()])
         .append_variable_outputs(1)
         .call()
         .await
@@ -938,7 +938,7 @@ async fn with_protocol_fees_swap_exact_output_0() {
         .await
         .unwrap();
 
-    fixture.exchange_a_instance
+    fixture.pool_a_instance
         .methods()
         .cache_vault_fees()
         .set_contracts(&[fixture.vault_contract_id.clone()])
@@ -961,7 +961,7 @@ async fn with_protocol_fees_swap_exact_output_0() {
     let result = fixture.router_instance
         .methods()
         .swap_exact_output(
-            Bits256(fixture.exchange_a_contract_id.hash().into()),
+            Bits256(fixture.pool_a_contract_id.hash().into()),
             output_amount,
             expected_input,
             Identity::Address(fixture.wallet.address().into()),
@@ -976,7 +976,7 @@ async fn with_protocol_fees_swap_exact_output_0() {
             None,
             Some(100_000_000),
         ))
-        .set_contracts(&[fixture.exchange_a_contract_id.clone()])
+        .set_contracts(&[fixture.pool_a_contract_id.clone()])
         .append_variable_outputs(3)
         .call()
         .await
@@ -1012,7 +1012,7 @@ async fn with_protocol_fees_swap_exact_input_multi() {
         .await
         .unwrap();
 
-    fixture.exchange_a_instance
+    fixture.pool_a_instance
         .methods()
         .cache_vault_fees()
         .set_contracts(&[fixture.vault_contract_id.clone()])
@@ -1020,7 +1020,7 @@ async fn with_protocol_fees_swap_exact_input_multi() {
         .await
         .unwrap();
 
-    fixture.exchange_b_instance
+    fixture.pool_b_instance
         .methods()
         .cache_vault_fees()
         .set_contracts(&[fixture.vault_contract_id.clone()])
@@ -1040,8 +1040,8 @@ async fn with_protocol_fees_swap_exact_input_multi() {
         .methods()
         .swap_exact_input_multihop(
             vec![
-                Bits256(fixture.exchange_a_contract_id.hash().into()),
-                Bits256(fixture.exchange_b_contract_id.hash().into()),
+                Bits256(fixture.pool_a_contract_id.hash().into()),
+                Bits256(fixture.pool_b_contract_id.hash().into()),
             ],
             expected_amount,
             Identity::Address(fixture.wallet.address().into()),
@@ -1057,8 +1057,8 @@ async fn with_protocol_fees_swap_exact_input_multi() {
             Some(100_000_000),
         ))
         .set_contracts(&[
-            fixture.exchange_a_contract_id.clone(),
-            fixture.exchange_b_contract_id.clone(),
+            fixture.pool_a_contract_id.clone(),
+            fixture.pool_b_contract_id.clone(),
         ])
         .append_variable_outputs(1)
         .call()
@@ -1094,7 +1094,7 @@ async fn with_protocol_fees_swap_exact_output_multi() {
         .await
         .unwrap();
 
-    fixture.exchange_a_instance
+    fixture.pool_a_instance
         .methods()
         .cache_vault_fees()
         .set_contracts(&[fixture.vault_contract_id.clone()])
@@ -1102,7 +1102,7 @@ async fn with_protocol_fees_swap_exact_output_multi() {
         .await
         .unwrap();
 
-    fixture.exchange_b_instance
+    fixture.pool_b_instance
         .methods()
         .cache_vault_fees()
         .set_contracts(&[fixture.vault_contract_id.clone()])
@@ -1123,8 +1123,8 @@ async fn with_protocol_fees_swap_exact_output_multi() {
         .methods()
         .swap_exact_output_multihop(
             vec![
-                Bits256(fixture.exchange_a_contract_id.hash().into()),
-                Bits256(fixture.exchange_b_contract_id.hash().into()),
+                Bits256(fixture.pool_a_contract_id.hash().into()),
+                Bits256(fixture.pool_b_contract_id.hash().into()),
             ],
             output_amount,
             expected_input,
@@ -1141,8 +1141,8 @@ async fn with_protocol_fees_swap_exact_output_multi() {
             Some(100_000_000),
         ))
         .set_contracts(&[
-            fixture.exchange_a_contract_id.clone(),
-            fixture.exchange_b_contract_id.clone(),
+            fixture.pool_a_contract_id.clone(),
+            fixture.pool_b_contract_id.clone(),
         ])
         .append_variable_outputs(2)
         .call()
