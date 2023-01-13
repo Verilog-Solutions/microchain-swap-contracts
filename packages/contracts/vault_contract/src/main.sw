@@ -7,6 +7,8 @@ use std::{
     constants::ZERO_B256,
     contract_id::ContractId,
     identity::Identity,
+    context::this_balance,
+    token::transfer,
 };
 
 use exchange_abi::{Exchange};
@@ -37,8 +39,23 @@ storage {
     },
 }
 
+#[storage(read, write)]
+fn only_owner() {
+    let sender: Result<Identity, AuthError> = msg_sender();
+
+    let owner = storage.owner;
+    require(
+        sender.unwrap() == owner || owner == Identity::Address(Address::from(ZERO_B256)),
+        Error::MustBeCalledByOwner
+    );
+    if (owner == Identity::Address(Address::from(ZERO_B256))) {
+        storage.owner = sender.unwrap();
+    }
+}
+
 impl Vault for Contract {
-    #[storage(read)]fn get_fees() -> VaultFee {
+    #[storage(read)]
+    fn get_fees() -> VaultFee {
         let fees = storage.fees;
         let decrease_since_change = fees.change_rate * (timestamp() - fees.start_time);
         let current_fee = if decrease_since_change > fees.start_fee {
@@ -55,17 +72,9 @@ impl Vault for Contract {
         }
     }
 
-    #[storage(read, write)]fn set_fees(start_fee: u16, change_rate: u16) {
-        let sender: Result<Identity, AuthError> = msg_sender();
-
-        let owner = storage.owner;
-        require(
-            sender.unwrap() == owner || owner == Identity::Address(Address::from(ZERO_B256)),
-            Error::MustBeCalledByOwner
-        );
-        if (owner == Identity::Address(Address::from(ZERO_B256))) {
-            storage.owner = sender.unwrap();
-        }
+    #[storage(read, write)]
+    fn set_fees(start_fee: u16, change_rate: u16) {
+        only_owner();
 
         storage.fees = StoredFees {
             start_time: timestamp(),
@@ -77,6 +86,15 @@ impl Vault for Contract {
     // Note: can call withdraw_protocol_fees on any contract, but there's no vulnerability to the vault
     fn claim_fees(pool: b256) {
         let exchange = abi(Exchange, pool);
-        exchange.withdraw_protocol_fees(Identity::ContractId(contract_id()));
+        let _amount_claimed = exchange.withdraw_protocol_fees(Identity::ContractId(contract_id()));
+    }
+
+    #[storage(read, write)]
+    fn withdraw(recipient: Identity, token: b256) -> u64 {
+        only_owner();
+
+        let balance = this_balance(ContractId::from(token));
+        transfer(balance, ContractId::from(token), recipient);
+        balance
     }
 }

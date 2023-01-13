@@ -17,7 +17,14 @@ abi Vault {
     // Read only
     ////////////////////
     /// Get information on the liquidity pool.
-    #[storage(read)]fn get_fees() -> VaultFee;
-    #[storage(read, write)]fn set_fees(start_fee: u16, change_rate: u16);
+    #[storage(read)]
+    fn get_fees() -> VaultFee;
+
+    #[storage(read, write)]
+    fn set_fees(start_fee: u16, change_rate: u16);
+    
     fn claim_fees(pool: b256);
+    
+    #[storage(read, write)]
+    fn withdraw(recipient: Identity, token: b256) -> u64;
 }
