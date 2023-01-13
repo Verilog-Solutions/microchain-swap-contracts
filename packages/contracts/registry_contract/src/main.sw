@@ -14,6 +14,7 @@ enum Error {
     AlreadyInitialized: (),
     AlreadyRegistered: (),
     InvalidContractCode: (),
+    InvalidVault: (),
     PoolInitialized: (),
 }
 
@@ -30,10 +31,13 @@ abi PoolRegistry {
     fn is_pool(addr: b256) -> bool;
     #[storage(read)]
     fn exchange_contract_root() -> b256;
+    #[storage(read)]
+    fn vault() -> b256;
 }
 
 storage {
     expected_contract_root: b256 = ZERO_B256,
+    expected_vault: b256 = ZERO_B256,
     pools: StorageMap<(b256, b256), b256> = StorageMap {},
     is_pool: StorageMap<b256, bool> = StorageMap {},
 }
@@ -44,6 +48,10 @@ impl PoolRegistry for Contract {
         require(storage.expected_contract_root == ZERO_B256, Error::AlreadyInitialized);
         let root = bytecode_root(ContractId::from(template_exchange_id));
         storage.expected_contract_root = root;
+
+        let exchange = abi(Exchange, template_exchange_id);
+        let vault_info = exchange.get_vault_info();
+        storage.expected_vault = vault_info.vault;
     }
 
     #[storage(write, read)]
@@ -61,6 +69,9 @@ impl PoolRegistry for Contract {
 
         let pool_info = exchange.get_pool_info();
         require(pool_info.lp_token_supply == 0, Error::PoolInitialized);
+
+        let vault_info = exchange.get_vault_info();
+        require(vault_info.vault == storage.expected_vault, Error::InvalidVault);
 
         storage.pools.insert((token0, token1), exchange_id);
         storage.is_pool.insert(exchange_id, true);
@@ -90,5 +101,10 @@ impl PoolRegistry for Contract {
     #[storage(read)]
     fn exchange_contract_root() -> b256 {
         storage.expected_contract_root
+    }
+
+    #[storage(read)]
+    fn vault() -> b256 {
+        storage.expected_vault
     }
 }

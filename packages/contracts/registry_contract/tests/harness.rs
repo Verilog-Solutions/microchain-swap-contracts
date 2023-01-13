@@ -69,7 +69,8 @@ async fn register_exchange() {
 
     registry_instance
         .methods()
-        .initialize(Bits256(exchange_contract_id.hash().into()))
+        .initialize(Bits256(exchange_contract_id.clone().hash().into()))
+        .set_contracts(&[exchange_contract_id.clone()])
         .call()
         .await
         .unwrap();
@@ -173,6 +174,7 @@ async fn unordered_tokens_should_fail() {
     registry_instance
         .methods()
         .initialize(Bits256(exchange_contract_id.hash().into()))
+        .set_contracts(&[exchange_contract_id.clone()])
         .call()
         .await
         .unwrap();
@@ -241,6 +243,7 @@ async fn test_invalid_contract() {
     registry_instance
         .methods()
         .initialize(Bits256(valid_exchange_contract_id.hash().into()))
+        .set_contracts(&[valid_exchange_contract_id])
         .call()
         .await
         .unwrap();
@@ -362,6 +365,7 @@ async fn initialized_pools_should_fail() {
     registry_instance
         .methods()
         .initialize(Bits256(exchange_contract_id.hash().into()))
+        .set_contracts(&[exchange_contract_id.clone()])
         .call()
         .await
         .unwrap();
@@ -431,6 +435,7 @@ async fn duplicate_pools_should_fail() {
     registry_instance
         .methods()
         .initialize(Bits256(exchange_contract_1_id.hash().into()))
+        .set_contracts(&[exchange_contract_1_id.clone()])
         .call()
         .await
         .unwrap();
