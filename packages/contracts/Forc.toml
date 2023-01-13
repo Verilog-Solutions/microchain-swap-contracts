@@ -1,0 +1,2 @@
+[workspace]
+members = ["microchain_helpers", "pool_abi", "registry_contract", "router_contract", "token_abi", "token_contract", "vault_abi", "vault_contract"]
