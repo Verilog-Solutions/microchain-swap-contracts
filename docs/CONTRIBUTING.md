@@ -1,20 +1,20 @@
-# 💚 Contributing To SwaySwap
+# 💚 Contributing To Microchain
 
-Thanks for your interest in contributing to SwaySwap! This document outlines the process for installing dependencies and setting up SwaySwap for development, as well as some conventions on contributing to SwaySwap.
+Thanks for your interest in contributing to Microchain! This document outlines the process for installing dependencies and setting up Microchain for development, as well as some conventions on contributing to Microchain.
 
 If you run into any difficulties getting started, you can always ask questions on our [Discord](https://discord.gg/xfpK4Pe).
 
 ## Finding Something to Work On
 
-There are many ways in which you may contribute to the SwaySwap project, some of which involve coding knowledge and some which do not. A few examples include:
+There are many ways in which you may contribute to the Microchain project, some of which involve coding knowledge and some which do not. A few examples include:
 
 - Reporting bugs
 - Adding new features or bugfixes for which there is already an open issue
 - Making feature requests
 
-Check out our [Help Wanted](https://github.com/FuelLabs/swayswap/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22) or [Good First Issues](https://github.com/FuelLabs/swayswap/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to find a suitable task.
+Check out our [Help Wanted](https://github.com/FuelLabs/Microchain/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22) or [Good First Issues](https://github.com/FuelLabs/Microchain/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) to find a suitable task.
 
-If you are planning something big, for example, related to multiple components or changes current behaviors, make sure to [open an issue](https://github.com/FuelLabs/swayswap/issues/new) to discuss with us before starting on the implementation.
+If you are planning something big, for example, related to multiple components or changes current behaviors, make sure to [open an issue](https://github.com/FuelLabs/Microchain/issues/new) to discuss with us before starting on the implementation.
 
 ## Contribution Flow
 

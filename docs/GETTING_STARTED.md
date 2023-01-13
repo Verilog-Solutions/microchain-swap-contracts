@@ -13,43 +13,10 @@ This project includes both frontend and contracts. To begin, install dependencie
 
 ## Running Project Locally
 
-### 📚 - Getting the Repository
-
-1. Visit the [SwaySwap](https://github.com/FuelLabs/swayswap) repo and fork the project.
-2. Then clone your forked copy to your local machine and get to work.
-
-```sh
-git clone https://github.com/FuelLabs/swayswap
-cd swayswap
-```
-
 ### 📦 - Install Dependencies
 
 ```sh
 pnpm install
-```
-
-### 📒 - Run Local Node
-
-In this step, we are going to;
-
-- launch a local `fuel-core` node;
-- launch a local `faucet` API;
-- Setup `swayswap-scripts`;
-- Build and deploy the SwaySwap contracts;
-- Initialize token contract;
-- Initialize pool with liquidity `ETH <> DAI`.
-
-```sh
-pnpm services:setup
-```
-
-### 💻 - Run Web App
-
-Start a local development frontend. After running the below command you can open [http://localhost:3000](http://localhost:3000) in your browser to view the frontend.
-
-```sh
-pnpm dev
 ```
 
 ## 📗 Project Overview
@@ -77,7 +44,6 @@ pnpm <command name>
 | `contracts:deploy` | Deploy the current binaries.                                                                                         |
 | `scripts:setup`    | Setup [swayswap-scripts](../packages/scripts/) used to build and deploy contracts and generate types.                |
 | `services:clean`   | Stop and remove all development containers that are running locally.                                                 |
-| `services:run`     | Run the local network with `fuel-core` and the `faucet` API.                                                         |
 | `services:setup`   | Run the local network, setup `swayswap-scripts` and build and deploy contracts normally used on the first run.       |
 
 > Other scripts can be found in [package.json](../package.json).
