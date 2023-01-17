@@ -2,13 +2,11 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { PoolContractAbi } from './PoolContractAbi';
-export type { PoolContractAbi } from './PoolContractAbi';
 export type { RegistryContractAbi } from './RegistryContractAbi';
 export type { RouterContractAbi } from './RouterContractAbi';
 export type { TokenContractAbi } from './TokenContractAbi';
 export type { VaultContractAbi } from './VaultContractAbi';
 
-export { PoolContractAbi__factory } from './factories/PoolContractAbi__factory';
 export { PoolContractAbi__factory } from './factories/PoolContractAbi__factory';
 export { RegistryContractAbi__factory } from './factories/RegistryContractAbi__factory';
 export { RouterContractAbi__factory } from './factories/RouterContractAbi__factory';

@@ -7,15 +7,16 @@ const { TOKEN_AMOUNT, ETH_AMOUNT } = process.env;
 export async function testSwap(
   routerContract: RouterContractAbi,
   tokenContract: TokenContractAbi,
-  exchangeContract: PoolContractAbi,
+  poolContract: PoolContractAbi,
   overrides: any
 ) {
+  const wallet = tokenContract.wallet!;
 
   console.log('Running test swap');
 
   // const result = await routerContract.functions.null(
   const result = await routerContract.functions.swap_exact_input(
-        exchangeContract.id.toB256(),
+        poolContract.id.toB256(),
         0,
         { Address: { value: wallet.address.toHexString() } },
       )
@@ -23,12 +24,12 @@ export async function testSwap(
         forward: [10, NativeAssetId],
         gasLimit: 10_000_000,
       })
-      .addContracts([exchangeContract.id])
+      .addContracts([poolContract.id])
       .txParams({
         variableOutputs: 2,
         gasLimit: 100_000_000,
         gasPrice: 1,
       })
       .call();
-  console.log(result)
+  console.log(`Swap successful on pool ${poolContract.id.toHexString()} (tx ${result.transactionId})`);
 }
