@@ -7,7 +7,7 @@ const { TOKEN_AMOUNT, ETH_AMOUNT } = process.env;
 export async function initializePool(
   routerContract: RouterContractAbi,
   tokenContract: TokenContractAbi,
-  exchangeContract: PoolContractAbi,
+  poolContract: PoolContractAbi,
   overrides: any
 ) {
   const wallet = tokenContract.wallet!;
@@ -40,7 +40,7 @@ export async function initializePool(
     throw new Error('Insufficient Tokens');
   }
 
-  const startPoolInfo = await exchangeContract.functions.get_pool_info().get();
+  const startPoolInfo = await poolContract.functions.get_pool_info().get();
   console.log(startPoolInfo.value)
 
   if (startPoolInfo.value.lp_token_supply.gt(0)) {
@@ -59,7 +59,7 @@ export async function initializePool(
         forward: [tokenAmount, tokenContract.id.toB256()],
       }),
       routerContract.functions.add_liquidity(
-        exchangeContract.id.toB256(), // pool
+        poolContract.id.toB256(), // pool
         ethAmount, // amount_a_desired
         tokenAmount, // amount_b_desired
         0, // amount_a_min
@@ -73,33 +73,14 @@ export async function initializePool(
       gasLimit: 100_000_000,
     })
     .addContracts([
-      exchangeContract.id,
+      poolContract.id,
     ])
     .call();
 
-  console.log(addLiq);
+  console.log(`Added liquidity (${addLiq.transactionId}`);
 
-  const poolInfo = await exchangeContract.functions.get_pool_info().get();
+  const poolInfo = await poolContract.functions.get_pool_info().get();
   console.log(poolInfo.value);
 
   console.log('Running test swap');
-
-  // const result = await routerContract.functions.null(
-  const result = await routerContract.functions.swap_exact_input(
-        exchangeContract.id.toB256(),
-        0,
-        { Address: { value: wallet.address.toHexString() } },
-      )
-      .callParams({
-        forward: [10, NativeAssetId],
-        gasLimit: 10_000_000,
-      })
-      .addContracts([exchangeContract.id])
-      .txParams({
-        variableOutputs: 2,
-        gasLimit: 100_000_000,
-        gasPrice: 1,
-      })
-      .call();
-  console.log(result)
 }

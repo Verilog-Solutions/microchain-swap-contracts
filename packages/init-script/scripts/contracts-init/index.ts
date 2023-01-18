@@ -7,6 +7,7 @@ import { PoolContractAbi__factory, RegistryContractAbi__factory, RouterContractA
 import { initializePool } from './initializePool';
 import { initializeTokenContract } from './initializeTokenContract';
 import { registerPool } from './registerPool';
+import { testSwap } from './testSwap';
 
 const {
   WALLET_SECRET,
@@ -53,6 +54,8 @@ async function main() {
   await registerPool(registryContract, exchange2Contract, overrides);
   await initializePool(routerContract, token1Contract, exchange1Contract, overrides);
   await initializePool(routerContract, token2Contract, exchange2Contract, overrides);
+  await testSwap(routerContract, token2Contract, exchange2Contract, overrides);
+  await testSwap(routerContract, token2Contract, exchange2Contract, overrides);
 }
 
 main();

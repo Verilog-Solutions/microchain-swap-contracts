@@ -11,7 +11,7 @@ export async function registerPool(
 ) {
   console.log('Registering pool');
 
-  const root = await registryContract.functions.exchange_contract_root().get();
+  const root = await registryContract.functions.pool_contract_root().get();
   if (root.value == ZeroBytes32) {
     console.log('Initializing registry');
     await registryContract.functions.initialize(exchangeContract.id.toB256())
@@ -30,7 +30,7 @@ export async function registerPool(
 
   console.log(`Registering exchange ${exchangeContract.id.toB256()}`);
   await registryContract
-    .functions.add_exchange_contract(exchangeContract.id.toB256())
+    .functions.add_pool_contract(exchangeContract.id.toB256())
     .txParams(overrides)
     .addContracts([exchangeContract.id])
     .call();
